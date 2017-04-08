@@ -30,6 +30,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -45,6 +46,8 @@ namespace Gendarme.Framework {
 		private int defects_limit = Int32.MaxValue;
 		private Bitmask<Severity> severity_bitmask = new Bitmask<Severity> (true);
 		private Bitmask<Confidence> confidence_bitmask = new Bitmask<Confidence> (true);
+
+		public Dictionary<string, HashSet<string>> SkippedFileList { get; set; }
 
 		private Collection<IRule> rules = new Collection<IRule> ();
 		private Collection<AssemblyDefinition> assemblies = new Collection<AssemblyDefinition> ();
@@ -136,7 +139,7 @@ namespace Gendarme.Framework {
 			AnalyzeModule = null;
 			AnalyzeType = null;
 			AnalyzeMethod = null;
-
+			
 			AssemblyResolver resolver = AssemblyResolver.Resolver;
 			resolver.AssemblyCache.Clear ();
 
@@ -180,10 +183,14 @@ namespace Gendarme.Framework {
 		{
 			if (!SeverityBitmask.Get (severity) || !ConfidenceBitmask.Get (confidence))
 				return false;
+
+
 			// for Assembly | Type | Methods we can ignore before executing the rule
 			// but for others (e.g. Parameters, Fields...) we can only ignore the results
 			return !IgnoreList.IsIgnored (currentRule, location);
 		}
+
+		protected string projectPath = string.Empty;
 
 		public virtual void Report (Defect defect)
 		{
@@ -196,7 +203,35 @@ namespace Gendarme.Framework {
 			if (IgnoreList.IsIgnored (defect.Rule, defect.Target))
 				return;
 
+			var source = GetPathFromSourceString(defect.Source);
+			
+			if(!string.IsNullOrEmpty(source))
+			{
+				foreach (var rules in SkippedFileList
+							.Where(x => source.GlobMatch(x.Key))
+							.Select(x => x.Value))
+				{
+					return;
+				}
+			}
+
+
 			defect_list.Add (defect);
+		}
+
+		private string GetPathFromSourceString(string defectLocation)
+		{
+			if(defectLocation.Contains("debugging symbols unavailable") || !defectLocation.Contains("("))
+			{
+				return string.Empty;
+			}
+			
+			if(defectLocation.Contains("\\"))
+			{
+				defectLocation = defectLocation.Replace("\\", "/");
+			}
+
+			return defectLocation.Substring(0, defectLocation.LastIndexOf("("));
 		}
 
 		public void Report (IMetadataTokenProvider metadata, Severity severity, Confidence confidence)
@@ -417,6 +452,17 @@ namespace Gendarme.Framework {
 			currentRule = rule;
 			rule.TearDown ();
 			currentRule = null;
+		}
+	}
+
+	public static class StringExtensionsForTheFrameWorkness
+	{
+		// Returns true if the globPattern matches the given string, where any "*" characters in the glob pattern are expanded to a regex .*
+		public static bool GlobMatch(this string str, string globPattern)
+		{
+			if (globPattern.IndexOf('*') < 0)
+				return str.Equals(globPattern, StringComparison.InvariantCulture);
+			return Regex.IsMatch(str, "^" + Regex.Escape(globPattern).Replace(@"\*", @".*") + "$");
 		}
 	}
 }

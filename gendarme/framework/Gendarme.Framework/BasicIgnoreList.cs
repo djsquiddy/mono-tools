@@ -93,7 +93,7 @@ namespace Gendarme.Framework {
 			HashSet<IMetadataTokenProvider> list;
 			if (!ignore.TryGetValue (rule.FullName, out list))
 				return false; // nothing is ignored for this rule
-
+				
 			return IsIgnored (list, metadata);
 		}
 

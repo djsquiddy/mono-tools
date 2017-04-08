@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 using Mono.Cecil;
@@ -54,7 +55,7 @@ namespace Gendarme.Framework {
 		Collection<AssemblyDefinition> Assemblies { get; }
 
 		IIgnoreList IgnoreList { get; set; }
-
+	 	Dictionary<string, HashSet<string>> SkippedFileList { get; set; }
 		Collection<Defect> Defects  { get; }
 		int DefectsLimit { get; }
 		Bitmask<Severity> SeverityBitmask { get; }

@@ -104,7 +104,7 @@ namespace Gendarme {
 					SeverityBitmask.SetAll ();
 					continue;
 				default:
-					string msg = String.Format (CultureInfo.CurrentCulture, "Unknown severity level '{0}'", option);
+					string msg = String.Format ("Unknown severity level '{0}'", option);
 					throw new OptionException (msg, "severity");
 				}
 
@@ -152,7 +152,7 @@ namespace Gendarme {
 					ConfidenceBitmask.SetAll ();
 					continue;
 				default:
-					string msg = String.Format (CultureInfo.CurrentCulture, "Unknown confidence level '{0}'", option);
+					string msg = String.Format ("Unknown confidence level '{0}'", option);
 					throw new OptionException (msg, "confidence");
 				}
 
@@ -171,7 +171,7 @@ namespace Gendarme {
 		static string ValidateInputFile (string option, string file)
 		{
 			if (!File.Exists (file)) {
-				string msg = String.Format (CultureInfo.CurrentCulture, "File '{0}' could not be found", file);
+				string msg = String.Format ("File '{0}' could not be found", file);
 				throw new OptionException (msg, option);
 			}
 			return file;
@@ -184,15 +184,15 @@ namespace Gendarme {
 				string path = Path.GetDirectoryName (file);
 				if (path.Length > 0) {
 					if (path.IndexOfAny (Path.GetInvalidPathChars ()) != -1)
-						msg = String.Format (CultureInfo.CurrentCulture, "Invalid path '{0}'", file);
+						msg = String.Format ("Invalid path '{0}'", file);
 					else if (!Directory.Exists (path))
-						msg = String.Format (CultureInfo.CurrentCulture, "Path '{0}' does not exists", file);
+						msg = String.Format ("Path '{0}' does not exists", file);
 				}
 			}
 
 			string fname = Path.GetFileName (file);
 			if ((fname.Length == 0) || (fname.IndexOfAny (Path.GetInvalidFileNameChars ()) != -1)) {
-				msg = String.Format (CultureInfo.CurrentCulture, "Filename '{0}' is not valid", fname);
+				msg = String.Format ("Filename '{0}' is not valid", fname);
 			}
 
 			if (msg.Length > 0)
@@ -213,7 +213,7 @@ namespace Gendarme {
 		{
 			int defects_limit;
 			if (String.IsNullOrEmpty (limit) || !Int32.TryParse (limit, out defects_limit)) {
-				string msg = String.Format (CultureInfo.CurrentCulture, "Invalid value '{0}' to limit defects", limit);
+				string msg = String.Format ("Invalid value '{0}' to limit defects", limit);
 				throw new OptionException (msg, "limit");
 			}
 			return defects_limit;
@@ -241,6 +241,7 @@ namespace Gendarme {
 				{ "quiet",	v => quiet = v != null },
 				{ "version",	v => version = v != null },
 				{ "h|?|help",	v => help = v != null },
+				{ "project=",   v => projectPath = v }
 			};
 
 			try {
@@ -250,6 +251,11 @@ namespace Gendarme {
 				Console.WriteLine ("Error parsing option '{0}' : {1}", e.OptionName, e.Message);
 				Console.WriteLine ();
 				return 1;
+			} catch(Exception ex)
+			{
+				Console.WriteLine ("Error parsing option '{0}'", ex);
+				Console.WriteLine ();
+
 			}
 
 			// by default the runner will ignore Audit and Low severity defects
@@ -438,7 +444,7 @@ namespace Gendarme {
 		private static string TimeToString (TimeSpan time)
 		{
 			if (time >= TimeSpan.FromMilliseconds (100))
-				return String.Format (CultureInfo.CurrentCulture, "{0:0.0} seconds", time.TotalSeconds);
+				return String.Format ("{0:0.0} seconds", time.TotalSeconds);
 			else
 				return "<0.1 seconds";
 		}
@@ -499,10 +505,10 @@ namespace Gendarme {
 				if (null != log_file || null != xml_file || null != html_file) {
 					List<string> files = new List<string> (new string [] { log_file, xml_file, html_file });
 					files.RemoveAll (string.IsNullOrEmpty);
-					hint = String.Format (CultureInfo.CurrentCulture, "Report{0} written to: {1}.",
+					hint = String.Format ("Report{0} written to: {1}.",
 						(files.Count > 1) ? "s" : string.Empty,
 						string.Join (",", files.Select (file => 
-							String.Format (CultureInfo.CurrentCulture, "`{0}'", file)).ToArray ()));
+							String.Format ("`{0}'", file)).ToArray ()));
 				}
 
 				if (Defects.Count == 0)
